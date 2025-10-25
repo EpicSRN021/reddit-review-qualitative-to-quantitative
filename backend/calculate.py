@@ -45,7 +45,7 @@ async def compute_weight(weight_factors, credibility):
 
     return 0.32 * upvote_w + 0.08  * karma_w + 0.24 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
 
-async def process_comments(comments: List[Tuple[str, str, List[float], List[float]]]) -> Tuple[List[Tuple[str, str]], float, List[float], str]:
+async def process_comments(comments):
     processed_full = []  
     comments_with_weight = []  
     total_weight = 0.0
