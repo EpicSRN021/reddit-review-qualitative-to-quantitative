@@ -37,17 +37,18 @@ def compute_score(metrics):
     valid_metrics = [m for m in metrics if m != -1]
     return sum(valid_metrics) / len(valid_metrics) if valid_metrics else 0.0
 
-def compute_weight(weight_factors):
+def compute_weight(weight_factors, credibility):
     if not weight_factors or len(weight_factors) != 4:
         return 1.0
 
-    upvotes, karma, time_ago, credibility = weight_factors
+    upvotes, karma, karma2, time_ago = weight_factors
     upvote_w = math.log(upvotes+1) /10
     karma_w = math.log(karma+1) /10
+    karma2_w = math.log(karma2+1) /10
     time_w = math.exp(-0.05 * time_ago)
     credibility_w = (credibility / 5) ** 2
 
-    return 0.32 * upvote_w + 0.32 * karma_w + 0.2 * time_w + 0.24 * credibility_w
+    return 0.32 * upvote_w + 0.16  * karma_w + 0.16 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
 
 def process_comments(comments):
     processed_full = []  
@@ -57,15 +58,15 @@ def process_comments(comments):
     weighted_metrics_sum = [0.0, 0.0, 0.0, 0.0]
 
     for c in comments:
-        text, metrics, weight_factors = c
-        if weight_factors[3] == -1:
+        text, url, metrics, weight_factors = c
+        if metrics[-1] == -1:
             continue
 
         score = compute_score(metrics)
-        weight = compute_weight(weight_factors)
+        weight = compute_weight(weight_factors, metrics[-1])
 
-        processed_full.append([text, score, metrics, weight])
-        comments_with_weight.append((text, weight))
+        processed_full.append([text, url, score, metrics, weight])
+        comments_with_weight.append(((text, url), weight))
 
         total_weight += weight
         weighted_score_sum += score * weight
@@ -82,9 +83,10 @@ def process_comments(comments):
         final_score = weighted_score_sum / total_weight
         final_metrics = [m / total_weight for m in weighted_metrics_sum]
 
+    top5 = [text for text, _ in processed[:5]]
 
 
-    return processed, final_score, final_metrics, summary(:5)
+    return processed, final_score, final_metrics, summary(top5), processed[:5]
 
 
 
