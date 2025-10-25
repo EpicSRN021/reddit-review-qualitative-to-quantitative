@@ -23,7 +23,9 @@ async def fetch_data(keyword):
             metric = metrics[comment]
             newdata.append((comment, url, metric, weights))
             
-    return process_comments(newdata)
+    p, fs, fm, summ = await process_comments(newdata)
+
+    return p, fs, fm, summ
 
 
         

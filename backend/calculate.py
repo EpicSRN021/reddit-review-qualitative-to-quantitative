@@ -57,8 +57,8 @@ async def process_comments(comments):
         if metrics[-1] == -1:
             continue
 
-        score = compute_score(metrics)
-        weight = compute_weight(weight_factors, metrics[-1])
+        score = await compute_score(metrics)
+        weight = await compute_weight(weight_factors, metrics[-1])
 
         processed_full.append([text, url, score, metrics, weight])
         comments_with_weight.append(((text, url), weight))
@@ -79,7 +79,7 @@ async def process_comments(comments):
         final_metrics = [m / total_weight for m in weighted_metrics_sum]
 
     top5 = [text for text, _ in processed[:5]]
-    summ = summary(top5)
+    summ = await summary(top5)
 
     return processed, final_score, final_metrics, summ
 
