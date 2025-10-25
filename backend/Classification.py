@@ -24,10 +24,10 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
 
-    Return a Python dictionary in this format:
+    Return a Python dictionary in this format where the reviews are the keys and the values are lists of integers of the metrics. 
     {{
-        "review1": [quality, cost, availability, utility, credibility],
-        "review2": [quality, cost, availability, utility, credibility],
+        "original review comment": [quality, cost, availability, utility, credibility],
+        "second review": [quality, cost, availability, utility, credibility],
         ...
     }}
 
