@@ -1,6 +1,3 @@
-import math
-
-
 #TODO 
 # ["comment", [metrics array], [weight factors array]]
 # ["comment", score, [metrics array], weight]
@@ -10,7 +7,8 @@ import math
 import math
 
 def compute_score(metrics):
-    return sum(metrics) / len(metrics) if metrics else 0.0
+    valid_metrics = [m for m in metrics if m != -1]
+    return sum(valid_metrics) / len(valid_metrics) if valid_metrics else 0.0
 
 def compute_weight(weight_factors):
     if not weight_factors or len(weight_factors) != 4:
@@ -25,27 +23,28 @@ def compute_weight(weight_factors):
     return 0.32 * upvote_w + 0.32 * karma_w + 0.2 * time_w + 0.24 * credibility_w
 
 def process_comments(comments):
-    processed_full = []  # keep full info for calculation
-    comments_with_weight = []  # for sorting comment texts
+    processed_full = []  
+    comments_with_weight = []  
     total_weight = 0.0
     weighted_score_sum = 0.0
     weighted_metrics_sum = [0.0, 0.0, 0.0, 0.0]
 
     for c in comments:
         text, metrics, weight_factors = c
+        if weight_factors[3] == -1:
+            continue
+
         score = compute_score(metrics)
         weight = compute_weight(weight_factors)
 
         processed_full.append([text, score, metrics, weight])
         comments_with_weight.append((text, weight))
 
-        # accumulate for final score/metrics
         total_weight += weight
         weighted_score_sum += score * weight
         for i in range(4):
             weighted_metrics_sum[i] += metrics[i] * weight
 
-    # sort comment texts by weight descending
     comments_with_weight.sort(key=lambda x: x[1], reverse=True)
     processed = [text for text, _ in comments_with_weight]
 
