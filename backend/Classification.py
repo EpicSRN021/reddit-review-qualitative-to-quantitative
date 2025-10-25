@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
 API_KEY = os.getenv("subscription_key")
-MODEL = "gpt-5-mini"
+MODEL = "gpt-5-nano"
+REASONING = "low"
 client = AsyncAzureOpenAI(
     api_key=API_KEY,
     azure_endpoint=ENDPOINT,
@@ -33,7 +34,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     Reviews: {reviews}
     """
     
-    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
+    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000, reasoning_effort= REASONING)
     return response.choices[0].message.content
 
 
