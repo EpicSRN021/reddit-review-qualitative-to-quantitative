@@ -15,11 +15,13 @@ async def fetch_data(keyword):
     for data in reddit_data:
         commentlist.append(data[0])
     metrics =  await analyze_comment(commentlist)
-    for data in reddit_data: 
-        key = data[0]
-        if key in metrics:
-            data.insert(2, metrics[key])
-    return process_comments(reddit_data)
+    newdata = []
+    for comment, url, weights in reddit_data: 
+        if comment in metrics:
+            metric = metrics[comment]
+            newdata.append((comment, url, metric, weights))
+            
+    return process_comments(newdata)
 
 
         
