@@ -2,9 +2,36 @@
 # ["comment", [metrics array], [weight factors array]]
 # ["comment", score, [metrics array], weight]
 # ["comments"](ordered), final score, final metrics
-
-
 import math
+import asyncio
+import os
+from openai import AsyncAzureOpenAI
+from dotenv import load_dotenv
+load_dotenv()
+ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
+API_KEY = os.getenv("subscription_key")
+MODEL = "gpt-5-mini"
+client = AsyncAzureOpenAI(
+    api_key=API_KEY,
+    azure_endpoint=ENDPOINT,
+    api_version="2024-12-01-preview"
+)
+
+async def summary(processed):
+    prompt = f"""
+    Given is a list of 5 Reddit comments reviewing a product, ,
+    give a quick summary for a potential buyer.
+    Reviews: {processed}
+    """
+    
+    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
+    return response.choices[0].message.content
+
+
+
+    
+    
+
 
 def compute_score(metrics):
     valid_metrics = [m for m in metrics if m != -1]
@@ -55,7 +82,9 @@ def process_comments(comments):
         final_score = weighted_score_sum / total_weight
         final_metrics = [m / total_weight for m in weighted_metrics_sum]
 
-    return processed, final_score, final_metrics
+
+
+    return processed, final_score, final_metrics, summary(:5)
 
 
 
