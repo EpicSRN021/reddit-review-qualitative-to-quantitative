@@ -6,7 +6,7 @@ from calculate import *
 from data import *
 
 
-async def fetch_data(keyword):   
+async def fetch_data(keyword)-> Tuple[List[Tuple[str, str]], float, List[float], str]:
     # get reddit data: ("comment", "url", [weight factors])
     # send classification ["comment"] and get ("comment", [metrics])
     reddit_data = get_reddit_tuples(keyword)

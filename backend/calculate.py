@@ -17,7 +17,7 @@ client = AsyncAzureOpenAI(
     api_version="2024-12-01-preview"
 )
 
-async def summary(processed):
+async def summary(processed) -> str:
     prompt = f"""
     Given is a list of 5 Reddit comments reviewing a product, ,
     give a quick summary for a potential buyer.
@@ -27,17 +27,11 @@ async def summary(processed):
     response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
     return response.choices[0].message.content
 
-
-
-    
-    
-
-
-def compute_score(metrics):
+async def compute_score(metrics):
     valid_metrics = [m for m in metrics if m != -1]
     return sum(valid_metrics) / len(valid_metrics) if valid_metrics else 0.0
 
-def compute_weight(weight_factors, credibility):
+async def compute_weight(weight_factors, credibility):
     if not weight_factors or len(weight_factors) != 4:
         return 1.0
 
@@ -45,12 +39,13 @@ def compute_weight(weight_factors, credibility):
     upvote_w = math.log(upvotes+1) /10
     karma_w = math.log(karma+1) /10
     karma2_w = math.log(karma2+1) /10
-    time_w = math.exp(-0.05 * time_ago)
+    time_w = 1 / (1 + math.exp(0.08 * (time_ago - 60)))
+
     credibility_w = (credibility / 5) ** 2
 
-    return 0.32 * upvote_w + 0.16  * karma_w + 0.16 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
+    return 0.32 * upvote_w + 0.08  * karma_w + 0.24 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
 
-def process_comments(comments):
+async def process_comments(comments: List[Tuple[str, str, List[float], List[float]]]) -> Tuple[List[Tuple[str, str]], float, List[float], str]:
     processed_full = []  
     comments_with_weight = []  
     total_weight = 0.0
@@ -86,7 +81,6 @@ def process_comments(comments):
     top5 = [text for text, _ in processed[:5]]
 
 
-    return processed, final_score, final_metrics, summary(top5), processed[:5]
-
+    return processed, final_score, final_metrics, summary(top5)
 
 
