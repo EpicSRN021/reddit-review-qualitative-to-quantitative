@@ -24,7 +24,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
 
-    Return a Python dictionary in this format where the reviews are the keys and the values are lists of integers of the metrics. 
+    Return ONLY a Python dictionary in this format where the reviews are the keys and the values are lists of integers of the metrics. Do not return any questions because of the size of the dataset. 
     {{
         "original review comment": [quality, cost, availability, utility, credibility],
         "second review": [quality, cost, availability, utility, credibility],
@@ -37,7 +37,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000, reasoning_effort= REASONING)
     r = response.choices[0].message.content
 
-     try:
+    try:
         r = ast.literal_eval(raw_output)
     except Exception as e:
         print("Failed to parse output:", e)
