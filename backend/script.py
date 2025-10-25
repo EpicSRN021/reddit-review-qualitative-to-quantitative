@@ -16,7 +16,7 @@ async def fetch_data(keyword):
     for data in reddit_data:
         commentlist.append(data[0])
     metricstring =  await analyze_comment(commentlist)
-    metrics = json.loads(metricstring)
+    # metrics = json.loads(metricstring)
     newdata = []
     for comment, url, weights in reddit_data: 
         if comment in metrics:
