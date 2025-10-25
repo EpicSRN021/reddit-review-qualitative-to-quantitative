@@ -38,7 +38,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000, reasoning_effort= REASONING)
     r = response.choices[0].message.content
 
-     try:
+    try:
         r = ast.literal_eval(raw_output)
     except Exception as e:
         print("Failed to parse output:", e)
