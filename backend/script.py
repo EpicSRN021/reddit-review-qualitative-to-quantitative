@@ -1,5 +1,6 @@
 import asyncio
 import subprocess
+import json
 from reddit_api_call import get_reddit_tuples
 from Classification import analyze_comment
 from calculate import *
@@ -14,7 +15,8 @@ async def fetch_data(keyword):
     commentlist = []
     for data in reddit_data:
         commentlist.append(data[0])
-    metrics =  await analyze_comment(commentlist)
+    metricstring =  await analyze_comment(commentlist)
+    metrics = json.loads(metricstring)
     newdata = []
     for comment, url, weights in reddit_data: 
         if comment in metrics:
