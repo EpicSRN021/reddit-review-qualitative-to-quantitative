@@ -79,8 +79,8 @@ async def process_comments(comments):
         final_metrics = [m / total_weight for m in weighted_metrics_sum]
 
     top5 = [text for text, _ in processed[:5]]
+    summ = summary(top5)
 
-
-    return processed, final_score, final_metrics, summary(top5)
+    return processed, final_score, final_metrics, summ
 
 
