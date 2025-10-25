@@ -39,7 +39,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     r = response.choices[0].message.content
 
     try:
-        r = ast.literal_eval(raw_output)
+        r = ast.literal_eval(r)
     except Exception as e:
         print("Failed to parse output:", e)
         print(r)
