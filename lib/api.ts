@@ -1,21 +1,18 @@
-// frontend/lib/api.ts - UPDATED
+// frontend/lib/api.ts
 // Calls backend/server.py which runs script.py
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface AnalysisResponse {
-  final_rating: number;           // Overall score 0-5 (from script.py final_score)
-  subscores: number[];            // [quality, cost, availability, utility] (from script.py final_metrics)
-  ai_summary: string;             // AI-generated summary (from script.py summary_task)
-  comments: [string, string][];   // [[text, url], ...] (from script.py top5)
+  final_rating: number;           // Overall score 0-5
+  subscores: number[];            // [quality, cost, availability, utility]
+  ai_summary: string;             // AI-generated summary
+  comments: [string, string][];   // [[text, url], ...]
+  similar_products: string[];     // List of similar product names
 }
 
 /**
  * Analyze a product by calling the backend server
- * The server runs script.py with the product keyword
- * 
- * @param productName - Product to search for (e.g., "MacBook Air")
- * @returns Analysis results with rating, subscores, summary, and top comments
  */
 export async function analyzeProduct(productName: string): Promise<AnalysisResponse> {
   try {

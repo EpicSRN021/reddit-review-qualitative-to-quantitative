@@ -12,6 +12,7 @@ import asyncio
 
 # Import your existing script
 from script import fetch_data
+from simprod import fetch_similar_products
 
 app = FastAPI()
 
@@ -43,29 +44,27 @@ async def analyze(request: AnalyzeRequest):
         print(f"\n🔍 Analyzing: {request.keyword}")
         
         # Call your existing script.py function
-        # Returns: (processed, final_score, final_metrics, summary_task)
-        # where processed is list of [text, url, score, metrics, weight]
-        processed, final_score, final_metrics, summary_task = await fetch_data(request.keyword)
-        
-        # Handle summary (might be a coroutine)
-        if asyncio.iscoroutine(summary_task):
-            summary = await summary_task
-        else:
-            summary = summary_task
+        # Returns: (processed, final_score, final_metrics, summary)
+        processed, final_score, final_metrics, summary = await fetch_data(request.keyword)
         
         print(f"✓ Analysis complete! Score: {final_score:.2f}/5.0")
         
         # Extract top 5 comments from processed
-        # processed is sorted by weight, so just take first 5
         # Each item is [text, url, score, metrics, weight]
         top_comments = [[item[0], item[1]] for item in processed[:5]]
+        
+        # Fetch similar products
+        print(f"🔍 Finding similar products...")
+        similar_products = await fetch_similar_products(request.keyword)
+        print(f"✓ Found {len(similar_products)} similar products")
         
         # Return in format frontend expects
         return {
             "final_rating": final_score,      # double
             "subscores": final_metrics,       # [quality, cost, availability, utility]
             "ai_summary": summary,            # string
-            "comments": top_comments          # [[text, url], [text, url], ...]
+            "comments": top_comments,         # [[text, url], [text, url], ...]
+            "similar_products": similar_products[:3]  # List of 3 product names
         }
         
     except Exception as e:
