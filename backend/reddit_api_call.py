@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python3
 """
 High-level wrapper to:
@@ -20,6 +18,10 @@ Returns a list of tuples shaped like:
 
 CLI usage:
     python reddit_api_call.py "MacBook Air" --subreddit 'apple+macbook+macbookair+macbookpro' --limit 100 --comments 30
+
+To use Google Custom Search instead of Reddit search:
+    python backend/reddit_api_call.py "MacBook Air" --source google --limit 10 --comments 30
+Requires GOOGLE_API_KEY and GOOGLE_CSE_ID in your environment.
 
 Requires env vars for PRAW:
   REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT
@@ -43,14 +45,45 @@ try:
     # When executed as a package module: python -m backend.reddit_api_call
     from .data import search_and_fetch  # type: ignore
     from .data_refactor import build_comment_tuples_from_jsonl  # type: ignore
+    from .data import fetch_post_data  # type: ignore
+    from .google_search import get_top_reddit_reviews  # type: ignore
 except Exception:
     # When executed as a script: python backend/reddit_api_call.py
     from backend.data import search_and_fetch  # type: ignore
     from backend.data_refactor import build_comment_tuples_from_jsonl  # type: ignore
+    from backend.data import fetch_post_data  # type: ignore
+    from backend.google_search import get_top_reddit_reviews  # type: ignore
 
 
 TmpMeta = "_tmp_search_meta.json"
 TmpJsonl = "_tmp_search_results.jsonl"
+
+
+def _write_jsonl(records: list[dict], path: str) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        for rec in records:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def _fetch_via_google(product_name: str, limit: int, comments: int) -> None:
+    # Use Google Custom Search to find top Reddit URLs and fetch them one by one.
+    urls = get_top_reddit_reviews(product_name, num_results=limit)
+    results: list[dict] = []
+    for i, url in enumerate(urls, start=1):
+        try:
+            data_obj = fetch_post_data(url, max_comments=comments)
+            if data_obj:
+                results.append(data_obj)
+        except Exception as e:
+            # Skip bad URLs but continue
+            print(f"[google-fetch] Skipping URL {i}/{len(urls)}: {url} ({e})")
+            continue
+    # Write JSONL so data_refactor can consume it directly
+    _write_jsonl(results, TmpJsonl)
+    # Also write a tiny meta file for parity with search_and_fetch
+    meta = {"source": "google", "keyword": product_name, "count": len(results), "urls": urls}
+    with open(TmpMeta, "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
 def _default_query_for_product(product_name: str) -> str:
@@ -76,27 +109,31 @@ def get_reddit_tuples(
     include_commenter_karma: bool = False,
     max_commenter_profiles: int = 200,
     query: Optional[str] = None,
+    source: str = "reddit",
 ) -> List[Tuple[str, str, list[Any]]]:
     """
     Orchestrate search -> fetch -> refactor and return comment tuples.
     """
     q = query or _default_query_for_product(product_name)
 
-    # Run search + fetch to temp files
-    search_and_fetch(
-        query=q,
-        subreddit=subreddit,
-        sort=sort,
-        time_filter=time_filter,
-        limit=limit,
-        max_comments=comments,
-        include_commenter_karma=include_commenter_karma,
-        max_commenter_profiles=max_commenter_profiles,
-        posts_json_path=TmpMeta,
-        posts_jsonl_path=TmpJsonl,
-    )
+    if source == "google":
+        # Fetch via Google → URLs → JSONL
+        _fetch_via_google(product_name, limit=limit, comments=comments)
+    else:
+        # Default: Reddit API search → JSONL
+        search_and_fetch(
+            query=q,
+            subreddit=subreddit,
+            sort=sort,
+            time_filter=time_filter,
+            limit=limit,
+            max_comments=comments,
+            include_commenter_karma=include_commenter_karma,
+            max_commenter_profiles=max_commenter_profiles,
+            posts_json_path=TmpMeta,
+            posts_jsonl_path=TmpJsonl,
+        )
 
-    # Refactor to tuples
     tuples = build_comment_tuples_from_jsonl(TmpJsonl)
     return tuples
 
@@ -109,6 +146,7 @@ def main() -> None:
     ap.add_argument("--sort", default="relevance", choices=["relevance","hot","top","new","comments"], help="Search sort")
     ap.add_argument("--limit", type=int, default=100, help="Max posts to fetch (API cap ~1000)")
     ap.add_argument("--comments", type=int, default=10, help="Max comments per post")
+    ap.add_argument("--source", default="reddit", choices=["reddit", "google"], help="Where to get candidate posts from")
     ap.add_argument("--commenter-karma", action="store_true", help="Try to fetch commenter karma (slower)")
     ap.add_argument("--max-commenter-profiles", type=int, default=200, help="Max distinct profiles to look up for karma")
     ap.add_argument("--query", default=None, help="Override auto query (advanced)")
@@ -124,6 +162,7 @@ def main() -> None:
         include_commenter_karma=args.commenter_karma,
         max_commenter_profiles=args.max_commenter_profiles,
         query=args.query,
+        source=args.source,
     )
 
     # Print as JSON for quick consumption
