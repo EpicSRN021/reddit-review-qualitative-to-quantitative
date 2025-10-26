@@ -16,12 +16,17 @@ from simprod import fetch_similar_products
 
 app = FastAPI()
 
-# Allow frontend to make requests from localhost:3000
+# Allow frontend to make requests from localhost:3000 and Vercel
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "https://reddit-review-qualitative-to-quantitative-qn60t8vld.vercel.app",  # Vercel production
+        "https://*.vercel.app",  # All Vercel preview deployments
+        "*"  # Allow all origins for development (remove in production)
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
