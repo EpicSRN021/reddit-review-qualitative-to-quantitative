@@ -84,11 +84,20 @@ async def process_comments(comments):
         final_score = 0.0
         final_metrics = [0.0, 0.0, 0.0, 0.0]
     else:
-        final_score = weighted_score_sum / total_weight
+        # final_score = weighted_score_sum / total_weight
         final_metrics = [
             (weighted_metrics_sum[i] / total_metric_weights[i]) if total_metric_weights[i] > 0 else 0.0
             for i in range(4)
         ]
+        sum = 0
+        count = 0
+        for i in range(4):
+            if (final_metrics[i] != 0):
+                sum += final_metrics[i]
+                count += 1
+        final_score = sum/count
+        
+
     top5 = [text for text, _ in processed[:5]]
     summ = await summary(top5)
 

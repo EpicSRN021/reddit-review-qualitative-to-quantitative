@@ -2,17 +2,23 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SearchSectionProps {
   onSearch: (query: string) => void
   isLoading: boolean
+  currentQuery?: string  // Add this
 }
 
-export function SearchSection({ onSearch, isLoading }: SearchSectionProps) {
-  const [query, setQuery] = useState("")
+export function SearchSection({ onSearch, isLoading, currentQuery = "" }: SearchSectionProps) {
+  const [query, setQuery] = useState(currentQuery)
+
+  // Update the input when currentQuery changes (e.g., from similar product click)
+  useEffect(() => {
+    setQuery(currentQuery)
+  }, [currentQuery])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

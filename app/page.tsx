@@ -6,6 +6,7 @@ import { SearchSection } from "@/components/search-section";
 import { ProductInsights } from "@/components/product-insights";
 import { RedditComments } from "@/components/reddit-comments";
 import { AISummary } from "@/components/ai-summary";
+import { SimilarProducts } from "@/components/similar-products";
 import { analyzeProduct, type AnalysisResponse } from "@/lib/api";
 
 export default function Home() {
@@ -13,13 +14,14 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [currentQuery, setCurrentQuery] = useState<string>("");
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
     setError(null);
     setData(null);
     setIsGeneratingSummary(false);
-
+    setCurrentQuery(query);  // Update current query
     try {
       const result = await analyzeProduct(query);
 
@@ -56,12 +58,25 @@ export default function Home() {
     }
   };
 
+  const handleSimilarProductClick = (productName: string) => {
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Trigger new search after brief delay
+    setTimeout(() => {
+      handleSearch(productName)
+    }, 500)
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#1a1a1b" }}>
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
-        <SearchSection onSearch={handleSearch} isLoading={isLoading} />
+        <SearchSection 
+          onSearch={handleSearch} 
+          isLoading={isLoading}
+          currentQuery={currentQuery}
+        />
 
         {error && (
           <div
@@ -75,8 +90,7 @@ export default function Home() {
             <p className="font-semibold">Error:</p>
             <p>{error}</p>
             <p className="text-sm mt-2" style={{ color: "#d7dadc" }}>
-              Make sure to enter a valid Reddit URL and that your backend is
-              running on port 8000.
+              Make sure to enter a valid product name and that your backend is running on port 8000.
             </p>
           </div>
         )}
@@ -99,6 +113,14 @@ export default function Home() {
               }
               isGeneratingSummary={isGeneratingSummary}
             />
+            
+            {/* Similar Products Section */}
+            {data.similar_products && data.similar_products.length > 0 && (
+              <SimilarProducts 
+                products={data.similar_products}
+                onProductClick={handleSimilarProductClick}
+              />
+            )}
           </div>
         )}
       </main>
