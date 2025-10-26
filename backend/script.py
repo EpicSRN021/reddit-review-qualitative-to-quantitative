@@ -30,11 +30,13 @@ async def fetch_data(keyword):
     # send classification ["comment"] and get ("comment", [metrics])
     reddit_data = get_reddit_tuples(keyword, limit = 1)
     
+    commentlist = []
     for data in reddit_data:
         commentlist.append(data[0])
     metrics =  await analyze_comment(commentlist)
     # metrics = json.loads(metricstring)
     index = 1
+    newdata = []
     for comment, url, weights in reddit_data: 
         if(index <= len(metrics)):
             metric = metrics[index]
