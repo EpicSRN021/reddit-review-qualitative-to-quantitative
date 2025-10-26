@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ReviewRadar - Product Insights from Reddit",
+  title: "RedditRadar - Product Insights from Reddit",
   description: "AI-powered product analysis from Reddit reviews",
   generator: "v0.app",
 }
