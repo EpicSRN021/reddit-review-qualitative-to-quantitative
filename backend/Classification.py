@@ -33,8 +33,8 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     Return ONLY a VALID Dictionary in this format where the integer indexes of the comments in order are the keys and the values are lists of integers of the metrics. Do not reason or question. Make sure to keep the length of the dictionary equal to the length of the comment list.  
     {{
-        "original review comment": [quality, cost, availability, utility, credibility],
-        "second review": [quality, cost, availability, utility, credibility],
+        1: [quality, cost, availability, utility, credibility],
+        2: [quality, cost, availability, utility, credibility],
         ...
     }}
 
@@ -43,12 +43,7 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     
     response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=16384, reasoning_effort= REASONING)
     r = response.choices[0].message.content
-    print(r)
-
     
-
-
-    print(r)
     try:
         r = ast.literal_eval(r)
     except Exception as e:
