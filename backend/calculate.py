@@ -36,6 +36,12 @@ async def compute_weight(weight_factors, credibility):
         return 1.0
 
     upvotes, karma, karma2, time_ago = weight_factors
+    if ((karma or 0) < 0):
+        karma = 0
+    if ((karma2 or 0) < 0):
+        karma2 = 0
+
+
     upvote_w = math.log(upvotes+1) /10
     karma_w = math.log((karma or 0)+1) /10
     karma2_w = math.log((karma2 or 0)+1) /10
@@ -46,18 +52,15 @@ async def compute_weight(weight_factors, credibility):
     return 0.32 * upvote_w + 0.08  * karma_w + 0.24 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
 
 async def process_comments(comments):
-    processed_full = []
-    comments_with_weight = []
-    
+    processed_full = []  
+    comments_with_weight = []  
     total_weight = 0.0
     weighted_score_sum = 0.0
     weighted_metrics_sum = [0.0, 0.0, 0.0, 0.0]
-    total_weight_per_metric = [0.0, 0.0, 0.0, 0.0] 
 
     for c in comments:
         text, url, metrics, weight_factors = c
-
-        if not metrics or metrics[-1] == -1:
+        if metrics[-1] == -1:
             continue
 
         score = await compute_score(metrics)
@@ -68,29 +71,22 @@ async def process_comments(comments):
 
         total_weight += weight
         weighted_score_sum += score * weight
-
         for i in range(4):
-            if metrics[i] >= 0: 
-                weighted_metrics_sum[i] += metrics[i] * weight
-                total_weight_per_metric[i] += weight
+            weighted_metrics_sum[i] += metrics[i] * weight
 
     comments_with_weight.sort(key=lambda x: x[1], reverse=True)
-    processed = [text for (text, _), _ in comments_with_weight]
+    processed = [text for text, _ in comments_with_weight]
 
     if total_weight == 0:
         final_score = 0.0
+        final_metrics = [0.0, 0.0, 0.0, 0.0]
     else:
         final_score = weighted_score_sum / total_weight
+        final_metrics = [m / total_weight for m in weighted_metrics_sum]
 
-    final_metrics = []
-    for i in range(4):
-        if total_weight_per_metric[i] > 0:
-            final_metrics.append(weighted_metrics_sum[i] / total_weight_per_metric[i])
-        else:
-            final_metrics.append(0.0)
-
-    top5 = [text for (text, _), _ in comments_with_weight[:5]]
+    top5 = [text for text, _ in processed[:5]]
     summ = await summary(top5)
 
     return processed, final_score, final_metrics, summ
+
 
