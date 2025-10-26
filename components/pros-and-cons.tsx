@@ -35,7 +35,7 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
               {pros.map(([proText, proUrl], index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 rounded-lg relative"
+                  className="flex items-start gap-3 p-3 rounded-lg group transition-colors hover:bg-opacity-70"
                   style={{ backgroundColor: "rgba(34, 197, 94, 0.1)" }}
                 >
                   <CheckCircle
@@ -43,23 +43,26 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
                     style={{ color: "#22c55e" }}
                   />
                   <div className="flex-1">
-                    <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "#d7dadc" }}
-                    >
-                      {proText}
-                    </p>
-                    {proUrl && (
-                      <a
-                        href={proUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute top-2 right-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                        title="View original Reddit comment"
+                    <div className="flex items-start justify-between gap-2">
+                      <p
+                        className="text-sm leading-relaxed flex-1"
+                        style={{ color: "#d7dadc" }}
                       >
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
+                        {proText}
+                      </p>
+                      {proUrl && (
+                        <a
+                          href={proUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          style={{ color: "#22c55e" }}
+                          title="View original Reddit comment"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -85,7 +88,7 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
               {cons.map(([conText, conUrl], index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 rounded-lg relative"
+                  className="flex items-start gap-3 p-3 rounded-lg group transition-colors hover:bg-opacity-70"
                   style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                 >
                   <XCircle
@@ -93,23 +96,26 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
                     style={{ color: "#ef4444" }}
                   />
                   <div className="flex-1">
-                    <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "#d7dadc" }}
-                    >
-                      {conText}
-                    </p>
-                    {conUrl && (
-                      <a
-                        href={conUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute top-2 right-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                        title="View original Reddit comment"
+                    <div className="flex items-start justify-between gap-2">
+                      <p
+                        className="text-sm leading-relaxed flex-1"
+                        style={{ color: "#d7dadc" }}
                       >
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
+                        {conText}
+                      </p>
+                      {conUrl && (
+                        <a
+                          href={conUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          style={{ color: "#ef4444" }}
+                          title="View original Reddit comment"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
