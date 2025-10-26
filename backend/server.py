@@ -77,10 +77,14 @@ async def analyze(request: AnalyzeRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    import os
+    
+    port = int(os.getenv("PORT", 8000))
+    
     print("\n" + "="*60)
     print("🚀 Starting ReviewRadar Backend Server")
     print("="*60)
-    print("Server will run on: http://localhost:8000")
+    print(f"Server will run on: http://0.0.0.0:{port}")
     print("Frontend should connect to this URL")
     print("="*60 + "\n")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
