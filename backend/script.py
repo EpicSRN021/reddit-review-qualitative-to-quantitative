@@ -25,15 +25,17 @@ async def fetch_data(keyword):
     # get reddit data: ("comment", "url", [weight factors])
     # send classification ["comment"] and get ("comment", [metrics])
     reddit_data = get_reddit_tuples(keyword, limit = 1)
-   
     for data in reddit_data:
         commentlist.append(data[0])
+        print(data[0])
     metrics =  await analyze_comment(commentlist)
     # metrics = json.loads(metricstring)
+    print(metrics)
     for comment, url, weights in reddit_data: 
         if comment in metrics:
             metric = metrics[comment]
             newdata.append((comment, url, metric, weights))
+    print(newdata)
             
     p, fs, fm, summ = await process_comments(newdata)
 
