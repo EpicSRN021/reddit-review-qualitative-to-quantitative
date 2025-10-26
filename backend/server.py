@@ -53,6 +53,16 @@ async def analyze(request: AnalyzeRequest):
         else:
             summary = summary_task
         
+        # Check if we have empty data (no Reddit comments found)
+        if not processed or len(processed) == 0:
+            print(f"✓ GPT Summary generated for '{request.keyword}' (no Reddit data available)")
+            return {
+                "final_rating": 0.0,              # No rating available
+                "subscores": [0.0, 0.0, 0.0, 0.0], # No subscores available
+                "ai_summary": summary,            # GPT-generated summary
+                "comments": []                    # No comments available
+            }
+        
         print(f"✓ Analysis complete! Score: {final_score:.2f}/5.0")
         
         # Extract top 5 comments from processed
