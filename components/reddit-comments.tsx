@@ -27,7 +27,7 @@ export function RedditComments({
             No Reddit reviews found
           </p>
           <p className="mb-4" style={{ color: "#818384" }}>
-            We couldn't find any Reddit discussions about this product.
+            We couldn&apos;t find any Reddit discussions about this product.
           </p>
 
           {isGeneratingSummary ? (

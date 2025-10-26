@@ -41,7 +41,7 @@ export function ProductInsights({ rating, subscores }: ProductInsightsProps) {
               No rating data available
             </p>
             <p style={{ color: "#818384" }}>
-              We couldn't find Reddit reviews to generate ratings. Check the AI
+              We couldn&apos;t find Reddit reviews to generate ratings. Check the AI
               Summary below for general product information.
             </p>
           </div>
