@@ -89,8 +89,9 @@ async def process_comments(comments):
         else:
             final_metrics.append(0.0)
 
-    top5 = [text for (text, _), _ in comments_with_weight[:5]]
+    top5 = [text for text, _ in processed[:5]]
     summ = await summary(top5)
 
     return processed, final_score, final_metrics, summ
+
 
