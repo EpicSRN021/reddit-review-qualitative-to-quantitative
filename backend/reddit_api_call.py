@@ -147,6 +147,7 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=100, help="Max posts to fetch (API cap ~1000)")
     ap.add_argument("--comments", type=int, default=10, help="Max comments per post")
     ap.add_argument("--source", default="reddit", choices=["reddit", "google"], help="Where to get candidate posts from")
+    ap.add_argument("--source", default="reddit", choices=["reddit", "google"], help="Where to get candidate posts from")
     ap.add_argument("--commenter-karma", action="store_true", help="Try to fetch commenter karma (slower)")
     ap.add_argument("--max-commenter-profiles", type=int, default=200, help="Max distinct profiles to look up for karma")
     ap.add_argument("--query", default=None, help="Override auto query (advanced)")

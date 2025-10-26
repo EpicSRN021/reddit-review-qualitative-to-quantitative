@@ -9,6 +9,7 @@ load_dotenv()
 ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
 API_KEY = os.getenv("subscription_key")
 MODEL = "gpt-5-mini"
+MODEL = "gpt-5-mini"
 REASONING = "low"
 client = AsyncAzureOpenAI(
     api_key=API_KEY,
@@ -30,14 +31,10 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
 
-<<<<<<< HEAD
     Return ONLY a VALID Dictionary in this format where the integer indexes of the comments in order are the keys and the values are lists of integers of the metrics. Do not reason or question. Make sure to keep the length of the dictionary equal to the length of the comment list.  
-=======
-    Return ONLY a JSON in this format where the reviews are the keys and the values are lists of integers of the metrics. Do not reason or question. 
->>>>>>> 4d78d91 (classifcation changes)
     {{
-        1: [quality, cost, availability, utility, credibility],
-        2: [quality, cost, availability, utility, credibility],
+        "original review comment": [quality, cost, availability, utility, credibility],
+        "second review": [quality, cost, availability, utility, credibility],
         ...
     }}
 
