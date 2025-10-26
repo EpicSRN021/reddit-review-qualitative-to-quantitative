@@ -93,7 +93,7 @@ async def process_comments(comments):
         count = 0
         for i in range(4):
             if (final_metrics[i] != 0):
-                sum += final_metrics
+                sum += final_metrics[i]
                 count += 1
         final_score = sum/count
         
