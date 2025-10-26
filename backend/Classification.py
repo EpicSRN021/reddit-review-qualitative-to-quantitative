@@ -1,7 +1,11 @@
 import asyncio
 import os
+<<<<<<< HEAD
 import re
 import ast
+=======
+import json
+>>>>>>> 4d78d91 (classifcation changes)
 from openai import AsyncAzureOpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,8 +19,11 @@ client = AsyncAzureOpenAI(
     api_version="2024-12-01-preview"
 )
 async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
+<<<<<<< HEAD
     text = "\n".join(reviews)  # or format as your prompt
     print(len(reviews))
+=======
+>>>>>>> 4d78d91 (classifcation changes)
     print(reviews)
     prompt = f"""
     Given is a list of Reddit comments reviewing a product, 
@@ -29,7 +36,11 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
 
+<<<<<<< HEAD
     Return ONLY a VALID Dictionary in this format where the integer indexes of the comments in order are the keys and the values are lists of integers of the metrics. Do not reason or question. Make sure to keep the length of the dictionary equal to the length of the comment list.  
+=======
+    Return ONLY a JSON in this format where the reviews are the keys and the values are lists of integers of the metrics. Do not reason or question. 
+>>>>>>> 4d78d91 (classifcation changes)
     {{
         1: [quality, cost, availability, utility, credibility],
         2: [quality, cost, availability, utility, credibility],
@@ -39,17 +50,29 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
     Reviews: {reviews}
     """
     
+<<<<<<< HEAD
     response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=16384, reasoning_effort= REASONING)
+=======
+    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=10000, reasoning_effort= REASONING)
+>>>>>>> 4d78d91 (classifcation changes)
     r = response.choices[0].message.content
+    print(r)
 
     
 
 
     print(r)
     try:
+<<<<<<< HEAD
         r = ast.literal_eval(r)
     except Exception as e:
         print("Failed to parse ast", e)
+=======
+        r = json.loads(r)
+    except json.JSONDecodeError as e:
+        print("Failed to parse JSON:", e)
+        print(r)
+>>>>>>> 4d78d91 (classifcation changes)
         r = {}
     
     return r
