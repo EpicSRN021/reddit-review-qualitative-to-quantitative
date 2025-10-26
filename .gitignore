@@ -65,8 +65,3 @@ test_*.py
 
 # ML models and data
 transformer/
-
-# Backend Python files (handled by separate backend repo)
-backend/
-requirements.txt
-render.yaml
