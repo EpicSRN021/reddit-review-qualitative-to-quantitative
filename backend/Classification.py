@@ -1,7 +1,7 @@
 import asyncio
 import os
 import re
-import json
+import ast
 from openai import AsyncAzureOpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,6 +15,8 @@ client = AsyncAzureOpenAI(
     api_version="2024-12-01-preview"
 )
 async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
+    text = "\n".join(reviews)  # or format as your prompt
+    print(len(reviews))
     print(reviews)
     prompt = f"""
     Given is a list of Reddit comments reviewing a product, 
@@ -27,34 +29,27 @@ async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
 
     If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
 
-    Return ONLY a VALID JSON in this format where the reviews are the keys and the values are lists of integers of the metrics. Do not reason or question. 
+    Return ONLY a VALID Dictionary in this format where the integer indexes of the comments in order are the keys and the values are lists of integers of the metrics. Do not reason or question. Make sure to keep the length of the dictionary equal to the length of the comment list.  
     {{
-        "original review comment": [quality, cost, availability, utility, credibility],
-        "second review": [quality, cost, availability, utility, credibility],
+        1: [quality, cost, availability, utility, credibility],
+        2: [quality, cost, availability, utility, credibility],
         ...
     }}
 
     Reviews: {reviews}
     """
     
-    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=10000, reasoning_effort= REASONING)
+    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=16384, reasoning_effort= REASONING)
     r = response.choices[0].message.content
 
+    
+
+
     print(r)
-    r = r.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
-
-# Escape unescaped backslashes
-    r = re.sub(r'(?<!\\)\\(?![\\/"bfnrtu])', r'\\\\', r)
-
-# Optionally remove trailing commas before closing braces/brackets
-    r = re.sub(r',(\s*[}\]])', r'\1', r)
-
-
     try:
-        r = json.loads(r)
-    except json.JSONDecodeError as e:
-        print("Failed to parse JSON:", e)
-        print(r)
+        r = ast.literal_eval(r)
+    except Exception as e:
+        print("Failed to parse ast", e)
         r = {}
     
     return r

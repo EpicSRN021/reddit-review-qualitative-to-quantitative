@@ -108,7 +108,7 @@ def main() -> None:
     ap.add_argument("--time-filter", default="year", choices=["all","day","hour","month","week","year"], help="Search window")
     ap.add_argument("--sort", default="relevance", choices=["relevance","hot","top","new","comments"], help="Search sort")
     ap.add_argument("--limit", type=int, default=100, help="Max posts to fetch (API cap ~1000)")
-    ap.add_argument("--comments", type=int, default=30, help="Max comments per post")
+    ap.add_argument("--comments", type=int, default=10, help="Max comments per post")
     ap.add_argument("--commenter-karma", action="store_true", help="Try to fetch commenter karma (slower)")
     ap.add_argument("--max-commenter-profiles", type=int, default=200, help="Max distinct profiles to look up for karma")
     ap.add_argument("--query", default=None, help="Override auto query (advanced)")
