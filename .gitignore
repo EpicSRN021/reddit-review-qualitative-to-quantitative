@@ -62,3 +62,6 @@ test_*.py
 
 # ESLint ignore
 .eslintignore
+
+# ML models and data
+transformer/
