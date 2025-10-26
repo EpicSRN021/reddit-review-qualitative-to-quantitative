@@ -35,6 +35,60 @@ except Exception:
 
 import praw  # type: ignore
 
+def search_and_fetch(
+    query: str,
+    subreddit: Optional[str] = None,
+    sort: str = "relevance",
+    time_filter: str = "all",
+    limit: int = 20,
+    max_comments: int = 100,
+    include_commenter_karma: bool = False,
+    max_commenter_profiles: int = 200,
+    posts_json_path: str = "search_results.json",
+    posts_jsonl_path: str = "search_posts.jsonl",
+) -> None:
+    """
+    Search Reddit for submissions matching the query and fetch full post/comment data for each.
+    Saves the search results metadata to a JSON file, and full post+comments to a JSONL file.
+    Prints progress to stdout.
+    """
+    reddit = get_reddit_client()
+    subreddit_obj = reddit.subreddit(subreddit) if subreddit else reddit.subreddit("all")
+    print(f"Searching for '{query}' in subreddit='{subreddit or 'all'}' (sort={sort}, time_filter={time_filter}, limit={limit})")
+    submissions = []
+    for i, subm in enumerate(subreddit_obj.search(query, sort=sort, time_filter=time_filter, limit=limit)):
+        post_meta = {
+            "id": subm.id,
+            "title": subm.title,
+            "subreddit": str(subm.subreddit),
+            "author": str(subm.author) if subm.author else None,
+            "created_utc": float(subm.created_utc),
+            "permalink": f"https://www.reddit.com{subm.permalink}",
+            "url": subm.url,
+            "score": int(subm.score),
+            "num_comments": int(subm.num_comments),
+        }
+        submissions.append(post_meta)
+    print(f"Found {len(submissions)} submissions. Writing metadata to {posts_json_path}")
+    with open(posts_json_path, "w", encoding="utf-8") as f:
+        json.dump(submissions, f, indent=2, ensure_ascii=False)
+
+    print(f"Fetching full post and comments for each submission; writing to {posts_jsonl_path}")
+    with open(posts_jsonl_path, "w", encoding="utf-8") as fout:
+        for idx, meta in enumerate(submissions, 1):
+            print(f" [{idx}/{len(submissions)}] Fetching post {meta['id']} ...")
+            try:
+                post_data = fetch_post_data(
+                    meta["permalink"],
+                    max_comments=max_comments,
+                    include_commenter_karma=include_commenter_karma,
+                    max_commenter_profiles=max_commenter_profiles,
+                )
+                fout.write(json.dumps(post_data, ensure_ascii=False) + "\n")
+            except Exception as e:
+                print(f"   Error fetching post {meta['id']}: {e}")
+    print("Done.")
+
 
 def _env(name: str, default: Optional[str] = None) -> str:
     v = os.getenv(name, default)
@@ -201,6 +255,7 @@ def fetch_post_data(url_or_id: str, max_comments: int = 100, include_commenter_k
                     "parent_id": getattr(c, "parent_id", None),
                     "author_link_karma": author_link_karma_c,
                     "author_comment_karma": author_comment_karma_c,
+                    "comment_url": f"https://www.reddit.com{subm.permalink}{c.id}",
                 }
             )
     except Exception as e:
@@ -211,23 +266,49 @@ def fetch_post_data(url_or_id: str, max_comments: int = 100, include_commenter_k
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch Reddit post data.")
-    parser.add_argument("url_or_id", help="Reddit post URL or base36 ID")
+    parser = argparse.ArgumentParser(description="Fetch Reddit post data or search and fetch multiple posts.")
+    parser.add_argument("url_or_id_or_query", help="Reddit post URL/base36 ID (default), or search query if --search is set")
     parser.add_argument(
-        "--comments", type=int, default=50, help="Max number of comments to return (default: 50)"
+        "--comments", type=int, default=50, help="Max number of comments to return/fetch per post (default: 50)"
     )
     parser.add_argument(
-        "--pretty", action="store_true", help="Pretty-print JSON output"
+        "--pretty", action="store_true", help="Pretty-print JSON output (for single post mode)"
     )
     parser.add_argument("--commenter-karma", action="store_true", help="If set, fetch karma for distinct comment authors (rate-limited; cached).")
     parser.add_argument("--max-commenter-profiles", type=int, default=200, help="Max distinct commenter profiles to look up for karma (default: 200).")
+    parser.add_argument("--search", action="store_true", help="If set, treat positional arg as a search query and fetch multiple posts.")
+    parser.add_argument("--subreddit", type=str, default=None, help="Subreddit to search (default: all)")
+    parser.add_argument("--sort", type=str, default="relevance", help="Sort for search (relevance, hot, top, new, comments)")
+    parser.add_argument("--time-filter", type=str, default="all", help="Time filter for search (all, day, hour, month, week, year)")
+    parser.add_argument("--limit", type=int, default=20, help="Max number of search results to fetch (default: 20)")
+    parser.add_argument("--posts-json-path", type=str, default="search_results.json", help="Path to save search results metadata (default: search_results.json)")
+    parser.add_argument("--posts-jsonl-path", type=str, default="search_posts.jsonl", help="Path to save full post+comments JSONL (default: search_posts.jsonl)")
     args = parser.parse_args()
 
-    data = fetch_post_data(args.url_or_id, max_comments=args.comments, include_commenter_karma=args.commenter_karma, max_commenter_profiles=args.max_commenter_profiles)
-    if args.pretty:
-        print(json.dumps(data, indent=2, ensure_ascii=False))
+    if args.search:
+        search_and_fetch(
+            query=args.url_or_id_or_query,
+            subreddit=args.subreddit,
+            sort=args.sort,
+            time_filter=args.time_filter,
+            limit=args.limit,
+            max_comments=args.comments,
+            include_commenter_karma=args.commenter_karma,
+            max_commenter_profiles=args.max_commenter_profiles,
+            posts_json_path=args.posts_json_path,
+            posts_jsonl_path=args.posts_jsonl_path,
+        )
     else:
-        print(json.dumps(data, separators=(",", ":"), ensure_ascii=False))
+        data = fetch_post_data(
+            args.url_or_id_or_query,
+            max_comments=args.comments,
+            include_commenter_karma=args.commenter_karma,
+            max_commenter_profiles=args.max_commenter_profiles,
+        )
+        if args.pretty:
+            print(json.dumps(data, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(data, separators=(",", ":"), ensure_ascii=False))
 
 
 if __name__ == "__main__":

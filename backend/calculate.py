@@ -2,48 +2,80 @@
 # ["comment", [metrics array], [weight factors array]]
 # ["comment", score, [metrics array], weight]
 # ["comments"](ordered), final score, final metrics
-
-
 import math
+import asyncio
+import os
+from openai import AsyncAzureOpenAI
+from dotenv import load_dotenv
+load_dotenv()
+ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
+API_KEY = os.getenv("subscription_key")
+MODEL = "gpt-5-mini"
+client = AsyncAzureOpenAI(
+    api_key=API_KEY,
+    azure_endpoint=ENDPOINT,
+    api_version="2024-12-01-preview"
+)
 
-def compute_score(metrics):
+async def summary(processed) -> str:
+    prompt = f"""
+    Given is a list of 5 Reddit comments reviewing a product, ,
+    give a quick summary for a potential buyer.
+    Reviews: {processed}
+    """
+    
+    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
+    return response.choices[0].message.content
+
+async def compute_score(metrics):
     valid_metrics = [m for m in metrics if m != -1]
     return sum(valid_metrics) / len(valid_metrics) if valid_metrics else 0.0
 
-def compute_weight(weight_factors):
+async def compute_weight(weight_factors, credibility):
     if not weight_factors or len(weight_factors) != 4:
         return 1.0
 
-    upvotes, karma, time_ago, credibility = weight_factors
+    upvotes, karma, karma2, time_ago = weight_factors
+    if ((karma or 0) < 0):
+        karma = 0
+    if ((karma2 or 0) < 0):
+        karma2 = 0
+
+
     upvote_w = math.log(upvotes+1) /10
-    karma_w = math.log(karma+1) /10
-    time_w = math.exp(-0.05 * time_ago)
+    karma_w = math.log((karma or 0)+1) /10
+    karma2_w = math.log((karma2 or 0)+1) /10
+    time_w = 1 / (1 + math.exp(0.08 * (time_ago - 60)))
+
     credibility_w = (credibility / 5) ** 2
 
-    return 0.32 * upvote_w + 0.32 * karma_w + 0.2 * time_w + 0.24 * credibility_w
+    return 0.32 * upvote_w + 0.08  * karma_w + 0.24 * karma2_w + 0.2 * time_w + 0.24 * credibility_w
 
-def process_comments(comments):
+async def process_comments(comments):
     processed_full = []  
     comments_with_weight = []  
     total_weight = 0.0
     weighted_score_sum = 0.0
     weighted_metrics_sum = [0.0, 0.0, 0.0, 0.0]
+    total_metric_weights = [0.0, 0.0, 0.0, 0.0]
 
     for c in comments:
-        text, metrics, weight_factors = c
-        if weight_factors[3] == -1:
+        text, url, metrics, weight_factors = c
+        if metrics[-1] == -1:
             continue
 
-        score = compute_score(metrics)
-        weight = compute_weight(weight_factors)
+        score = await compute_score(metrics)
+        weight = await compute_weight(weight_factors, metrics[-1])
 
-        processed_full.append([text, score, metrics, weight])
-        comments_with_weight.append((text, weight))
+        processed_full.append([text, url, score, metrics, weight])
+        comments_with_weight.append(((text, url), weight))
 
         total_weight += weight
         weighted_score_sum += score * weight
         for i in range(4):
-            weighted_metrics_sum[i] += metrics[i] * weight
+            if metrics[i] >= 0:  # skip negative metrics
+                weighted_metrics_sum[i] += metrics[i] * weight
+                total_metric_weights[i] += weight
 
     comments_with_weight.sort(key=lambda x: x[1], reverse=True)
     processed = [text for text, _ in comments_with_weight]
@@ -53,9 +85,13 @@ def process_comments(comments):
         final_metrics = [0.0, 0.0, 0.0, 0.0]
     else:
         final_score = weighted_score_sum / total_weight
-        final_metrics = [m / total_weight for m in weighted_metrics_sum]
+        final_metrics = [
+            (weighted_metrics_sum[i] / total_metric_weights[i]) if total_metric_weights[i] > 0 else 0.0
+            for i in range(4)
+        ]
+    top5 = [text for text, _ in processed[:5]]
+    summ = await summary(top5)
 
-    return processed, final_score, final_metrics
-
+    return processed, final_score, final_metrics, summ
 
 
