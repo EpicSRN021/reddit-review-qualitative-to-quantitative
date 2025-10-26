@@ -49,3 +49,16 @@ __pycache__/
 # Temporary Reddit fetch artifacts
 _tmp_search_meta.json
 _tmp_search_results.jsonl
+
+# Python virtual environment
+venv/
+.venv/
+
+# Log files
+*.log
+
+# Test files
+test_*.py
+
+# ESLint ignore
+.eslintignore
