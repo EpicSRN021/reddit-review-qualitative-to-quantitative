@@ -174,11 +174,17 @@ def estimate_votes(score: int, upvote_ratio: Optional[float]) -> Tuple[Optional[
     return (u_int, d_int)
 
 
-def fetch_post_data(url_or_id: str, max_comments: int = 100, include_commenter_karma: bool = False, max_commenter_profiles: int = 200) -> Dict[str, Any]:
+def fetch_post_data(
+    url_or_id: str,
+    max_comments: int = 100,
+    include_commenter_karma: bool = False,
+    max_commenter_profiles: int = 200,
+    reddit: Optional[praw.Reddit] = None,
+) -> Dict[str, Any]:
     """
     Fetch submission metrics and up to `max_comments` flattened comments.
     """
-    subm = get_submission(url_or_id)
+    subm = get_submission(url_or_id, reddit=reddit)
 
     commenter_cache: Dict[str, Tuple[Optional[int], Optional[int]]] = {}
     profiles_looked_up = 0
@@ -265,9 +271,22 @@ def fetch_post_data(url_or_id: str, max_comments: int = 100, include_commenter_k
     return {"post": post, "comments": comments}
 
 
+def fetch_from_urls(urls, max_comments=20, out_json="posts_from_urls.json"):
+    reddit = get_reddit_client()
+    results = []
+    for i, url in enumerate(urls, start=1):
+        print(f"[{i}/{len(urls)}] Fetching {url}")
+        data = fetch_post_data(url, max_comments=max_comments, reddit=reddit)
+        results.append(data)
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    print(f"Done. Wrote {len(results)} posts to {out_json}")
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch Reddit post data or search and fetch multiple posts.")
-    parser.add_argument("url_or_id_or_query", help="Reddit post URL/base36 ID (default), or search query if --search is set")
+    parser.add_argument("url_or_id_or_query", nargs="?", help="Reddit post URL/base36 ID (default), or search query if --search is set")
     parser.add_argument(
         "--comments", type=int, default=50, help="Max number of comments to return/fetch per post (default: 50)"
     )
@@ -283,7 +302,14 @@ def main():
     parser.add_argument("--limit", type=int, default=20, help="Max number of search results to fetch (default: 20)")
     parser.add_argument("--posts-json-path", type=str, default="search_results.json", help="Path to save search results metadata (default: search_results.json)")
     parser.add_argument("--posts-jsonl-path", type=str, default="search_posts.jsonl", help="Path to save full post+comments JSONL (default: search_posts.jsonl)")
+    parser.add_argument("--urls-file", type=str, default=None, help="Path to a text file with one Reddit post URL per line; skips search and fetches those posts directly")
+    parser.add_argument("--out-json", type=str, default="posts_from_urls.json", help="Output JSON path when using --urls-file (default: posts_from_urls.json)")
     args = parser.parse_args()
+
+    if args.urls_file:
+        urls = [u.strip() for u in open(args.urls_file, "r", encoding="utf-8") if u.strip()]
+        fetch_from_urls(urls, max_comments=args.comments, out_json=args.out_json)
+        return
 
     if args.search:
         search_and_fetch(
