@@ -43,21 +43,39 @@ async def fetch_data(keyword):
         
 async def fetch_pros_cons():
     prompt = f"""
-    Given a list of Reddit reviews of a product, give me a list the main pros and cons based on the comments.
-    If it is pro label with 1, and con label with 0. 
-    For each pro or con give me the index of the review from the list provided.
+    Given a list of Reddit reviews of a product, extract the main pros and cons based on the comments.
+    For each pro or con, provide the text and the index of the review from the list it was based on.
 
-    Your response should be in the following format:
-    {"blah blah", 0, 32}
-    {"blah blah", 1, 3}
-    {"blah blah", 1, 2}...
-    
+    Your response should be in JSON format:
+    {{
+        "pros": [
+            {{"text": "description of pro", "comment_index": 0}},
+            {{"text": "another pro", "comment_index": 2}}
+        ],
+        "cons": [
+            {{"text": "description of con", "comment_index": 1}},
+            {{"text": "another con", "comment_index": 3}}
+        ]
+    }}
 
     Reviews: {commentlist}
     """
     
-    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
-    return response.choices[0].message.content
+    response = await client.chat.completions.create(
+        model=MODEL, 
+        messages=[{"role": "user", "content": prompt}], 
+        max_completion_tokens=5000,
+        response_format={"type": "json_object"}
+    )
+    
+    # Parse the JSON response
+    result = json.loads(response.choices[0].message.content)
+    
+    # Extract pros and cons with their comment indices
+    pros = [(item["text"], item["comment_index"]) for item in result.get("pros", [])]
+    cons = [(item["text"], item["comment_index"]) for item in result.get("cons", [])]
+    
+    return pros, cons
 
 
 
