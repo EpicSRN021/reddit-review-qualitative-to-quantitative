@@ -18,7 +18,7 @@ client = AsyncAzureOpenAI(
 )
 async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
      # or format as your prompt
-
+    
     prompt = f"""
     Given is a list of Reddit comments reviewing a product, 
     analyze each review and rate it from 0-5 for:
