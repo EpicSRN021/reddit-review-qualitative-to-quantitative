@@ -9,13 +9,8 @@ from data import *
 async def fetch_data(keyword):   
     # get reddit data: ("comment", "url", [weight factors])
     # send classification ["comment"] and get ("comment", [metrics])
-<<<<<<< HEAD
     reddit_data = get_reddit_tuples(keyword, limit = 5)
     
-=======
-    reddit_data = get_reddit_tuples(keyword, limit = 1)
-   
->>>>>>> 4d78d91 (classifcation changes)
     commentlist = []
     for data in reddit_data:
         commentlist.append(data[0])
