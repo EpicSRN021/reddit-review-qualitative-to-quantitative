@@ -32,8 +32,7 @@ export async function analyzeProduct(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({
-        detail:
-          "Failed to analyze product. Please check your backend server.",
+        detail: "Failed to analyze product. Please check your backend server.",
       }));
       throw new Error(error.detail || `Server error: ${response.status}`);
     }

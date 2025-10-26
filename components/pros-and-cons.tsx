@@ -29,7 +29,7 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
               Pros
             </h3>
           </div>
-          
+
           {pros && pros.length > 0 ? (
             <div className="space-y-2">
               {pros.map(([proText, proUrl], index) => (
@@ -38,9 +38,15 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
                   className="flex items-start gap-3 p-3 rounded-lg relative"
                   style={{ backgroundColor: "rgba(34, 197, 94, 0.1)" }}
                 >
-                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#22c55e" }} />
+                  <CheckCircle
+                    className="h-4 w-4 mt-0.5 flex-shrink-0"
+                    style={{ color: "#22c55e" }}
+                  />
                   <div className="flex-1">
-                    <p className="text-sm leading-relaxed" style={{ color: "#d7dadc" }}>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "#d7dadc" }}
+                    >
                       {proText}
                     </p>
                     {proUrl && (
@@ -73,7 +79,7 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
               Cons
             </h3>
           </div>
-          
+
           {cons && cons.length > 0 ? (
             <div className="space-y-2">
               {cons.map(([conText, conUrl], index) => (
@@ -82,9 +88,15 @@ export function ProsAndCons({ pros, cons }: ProsAndConsProps) {
                   className="flex items-start gap-3 p-3 rounded-lg relative"
                   style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                 >
-                  <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#ef4444" }} />
+                  <XCircle
+                    className="h-4 w-4 mt-0.5 flex-shrink-0"
+                    style={{ color: "#ef4444" }}
+                  />
                   <div className="flex-1">
-                    <p className="text-sm leading-relaxed" style={{ color: "#d7dadc" }}>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "#d7dadc" }}
+                    >
                       {conText}
                     </p>
                     {conUrl && (

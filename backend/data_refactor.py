@@ -33,8 +33,8 @@ import argparse
 import json
 import time
 from pathlib import Path
-from datetime import datetime, UTC
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Import from data.py
 
@@ -50,7 +50,7 @@ try:
 except Exception as e:
     raise SystemExit(f"Failed to import backend.data.search_and_fetch: {e}")
 
-TupleType = Tuple[str, str, List[Optional[int] | float]]
+TupleType = Tuple[str, str, List[Union[int, float, None]]]
 
 
 def _humanize_age(seconds_ago: float) -> str:
@@ -104,8 +104,8 @@ def build_comment_tuples_from_jsonl(in_jsonl: str) -> List[TupleType]:
 
             post_score = int(post.get("score", 0))
             created_utc = float(post.get("created_utc", now))
-            now_dt = datetime.now(UTC)
-            age_months = (now_dt - datetime.fromtimestamp(created_utc, UTC)).total_seconds() / (86400.0 * 30.0)
+            now_dt = datetime.now(timezone.utc)
+            age_months = (now_dt - datetime.fromtimestamp(created_utc, timezone.utc)).total_seconds() / (86400.0 * 30.0)
             if age_months < (1.0 / 30.0):  # enforce minimum of 1 day expressed in months
                 age_months = (1.0 / 30.0)
 
