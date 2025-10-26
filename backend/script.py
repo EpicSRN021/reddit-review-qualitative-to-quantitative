@@ -19,18 +19,17 @@ client = AsyncAzureOpenAI(
 )
 
 commentlist = []
+newdata = []
 
 async def fetch_data(keyword):   
     # get reddit data: ("comment", "url", [weight factors])
     # send classification ["comment"] and get ("comment", [metrics])
     reddit_data = get_reddit_tuples(keyword, limit = 1)
    
-    commentlist = []
     for data in reddit_data:
         commentlist.append(data[0])
     metrics =  await analyze_comment(commentlist)
     # metrics = json.loads(metricstring)
-    newdata = []
     for comment, url, weights in reddit_data: 
         if comment in metrics:
             metric = metrics[comment]
@@ -68,13 +67,21 @@ async def fetch_pros_cons():
         response_format={"type": "json_object"}
     )
     
-    # Parse the JSON response
     result = json.loads(response.choices[0].message.content)
     
-    # Extract pros and cons with their comment indices
-    pros = [(item["text"], item["comment_index"]) for item in result.get("pros", [])]
-    cons = [(item["text"], item["comment_index"]) for item in result.get("cons", [])]
-    
+    pros = []
+    cons = []
+
+    for item in result.get("pros", []):
+        idx = item.get("comment_index")
+        url = newdata[idx][1] if 0 <= idx < len(newdata) else None
+        pros.append((item["text"], url))
+
+    for item in result.get("cons", []):
+        idx = item.get("comment_index")
+        url = newdata[idx][1] if 0 <= idx < len(newdata) else None
+        cons.append((item["text"], url))
+
     return pros, cons
 
 
