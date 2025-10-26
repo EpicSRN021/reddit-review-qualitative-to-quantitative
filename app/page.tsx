@@ -6,6 +6,7 @@ import { SearchSection } from "@/components/search-section";
 import { ProductInsights } from "@/components/product-insights";
 import { RedditComments } from "@/components/reddit-comments";
 import { AISummary } from "@/components/ai-summary";
+import { ProsAndCons } from "@/components/pros-and-cons";
 import { SimilarProducts } from "@/components/similar-products";
 import { analyzeProduct, type AnalysisResponse } from "@/lib/api";
 
@@ -112,6 +113,12 @@ export default function Home() {
                 data.final_rating === 0 && data.comments.length === 0
               }
               isGeneratingSummary={isGeneratingSummary}
+            />
+            
+            {/* Pros and Cons Section */}
+            <ProsAndCons
+              pros={data.pros || []}
+              cons={data.cons || []}
             />
             
             {/* Similar Products Section */}

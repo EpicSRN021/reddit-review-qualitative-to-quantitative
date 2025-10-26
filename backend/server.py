@@ -44,17 +44,26 @@ async def analyze(request: AnalyzeRequest):
         print(f"\n🔍 Analyzing: {request.keyword}")
         
         # Call your existing script.py function
-        # Returns: (processed, final_score, final_metrics, summary)
-        processed, final_score, final_metrics, summary = await fetch_data(request.keyword)
+        # Returns: (processed, final_score, final_metrics, summary, pros, cons)
+        processed, final_score, final_metrics, summary, pros, cons = await fetch_data(request.keyword)
         
         # Check if we have empty data (no Reddit comments found)
         if not processed or len(processed) == 0:
             print(f"✓ GPT Summary generated for '{request.keyword}' (no Reddit data available)")
+            
+            # Still fetch similar products even when no Reddit comments found
+            print(f"🔍 Finding similar products...")
+            similar_products = await fetch_similar_products(request.keyword)
+            print(f"✓ Found {len(similar_products)} similar products")
+            
             return {
                 "final_rating": 0.0,              # No rating available
                 "subscores": [0.0, 0.0, 0.0, 0.0], # No subscores available
                 "ai_summary": summary,            # GPT-generated summary
-                "comments": []                    # No comments available
+                "comments": [],                    # No comments available
+                "pros": [],                        # No pros from Reddit comments
+                "cons": [],                        # No cons from Reddit comments
+                "similar_products": similar_products  # Similar products still available
             }
         
         print(f"✓ Analysis complete! Score: {final_score:.2f}/5.0")
@@ -74,6 +83,8 @@ async def analyze(request: AnalyzeRequest):
             "subscores": final_metrics,       # [quality, cost, availability, utility]
             "ai_summary": summary,            # string
             "comments": top_comments,         # [[text, url], [text, url], ...]
+            "pros": [pro[0] for pro in pros], # List of pro texts (no URLs)
+            "cons": [con[0] for con in cons], # List of con texts (no URLs)
             "similar_products": similar_products[:3]  # List of 3 product names
         }
         

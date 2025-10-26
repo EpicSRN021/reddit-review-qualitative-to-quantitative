@@ -138,10 +138,23 @@ async def fetch_data(keyword):
         index+=1
     
     p, fs, fm, summ = await process_comments(newdata)
+    
+    # Extract pros and cons from Reddit comments
+    print(f"🔍 Extracting pros and cons from Reddit comments...")
+    print(f"DEBUG: commentlist length: {len(commentlist)}")
+    print(f"DEBUG: newdata length: {len(newdata)}")
+    try:
+        pros, cons = await fetch_pros_cons(commentlist, newdata)
+        print(f"✓ Found {len(pros)} pros and {len(cons)} cons from Reddit comments")
+    except Exception as e:
+        print(f"⚠️ Failed to extract pros/cons from Reddit comments: {e}")
+        import traceback
+        traceback.print_exc()
+        pros, cons = [], []
 
-    return p, fs, fm, summ
+    return p, fs, fm, summ, pros, cons
 
-async def fetch_pros_cons():
+async def fetch_pros_cons(commentlist, newdata):
     prompt = f"""
     Given a list of Reddit reviews of a product, extract the main pros and cons based on the comments.
     For each pro or con, provide the text and the index of the review from the list it was based on.
