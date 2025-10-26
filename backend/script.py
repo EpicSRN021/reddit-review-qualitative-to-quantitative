@@ -121,8 +121,13 @@ async def fetch_data(keyword):
         # Generate GPT summary for the product
         gpt_summary = await generate_gpt_summary(keyword)
         
+        # Check if GPT determined it's not a product
+        if gpt_summary and "not a product" in gpt_summary.lower():
+            print(f"GPT determined '{keyword}' is not a product")
+            return [], [], [], gpt_summary, [], [], True  # Add is_not_product flag
+        
         # Return empty data with GPT summary
-        return [], [], [], gpt_summary
+        return [], [], [], gpt_summary, [], [], False
     
     commentlist = []
     for data in reddit_data:
@@ -152,7 +157,7 @@ async def fetch_data(keyword):
         traceback.print_exc()
         pros, cons = [], []
 
-    return p, fs, fm, summ, pros, cons
+    return p, fs, fm, summ, pros, cons, False  # is_not_product = False for normal products
 
 async def fetch_pros_cons(commentlist, newdata):
     prompt = f"""
