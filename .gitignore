@@ -45,3 +45,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Temporary Reddit fetch artifacts
+_tmp_search_meta.json
+_tmp_search_results.jsonl
