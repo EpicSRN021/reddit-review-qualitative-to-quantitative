@@ -83,8 +83,8 @@ async def analyze(request: AnalyzeRequest):
             "subscores": final_metrics,       # [quality, cost, availability, utility]
             "ai_summary": summary,            # string
             "comments": top_comments,         # [[text, url], [text, url], ...]
-            "pros": [pro[0] for pro in pros], # List of pro texts (no URLs)
-            "cons": [con[0] for con in cons], # List of con texts (no URLs)
+            "pros": pros, # List of pros with URLs [(text, url), ...]
+            "cons": cons, # List of cons with URLs [(text, url), ...]
             "similar_products": similar_products[:3]  # List of 3 product names
         }
         

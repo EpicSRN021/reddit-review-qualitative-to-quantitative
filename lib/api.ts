@@ -8,8 +8,8 @@ export interface AnalysisResponse {
   subscores: number[];            // [quality, cost, availability, utility]
   ai_summary: string;             // AI-generated summary
   comments: [string, string][];   // [[text, url], ...]
-  pros: string[];                 // List of pros from Reddit comments
-  cons: string[];                 // List of cons from Reddit comments
+  pros: [string, string | null][]; // List of pros with URLs from Reddit comments
+  cons: [string, string | null][]; // List of cons with URLs from Reddit comments
   similar_products: string[];     // List of similar product names
 }
 
