@@ -105,7 +105,7 @@ def get_reddit_tuples(
     time_filter: str = "year",
     sort: str = "relevance",
     limit: int = 100,
-    comments: int = 30,
+    comments: int = 10,
     include_commenter_karma: bool = False,
     max_commenter_profiles: int = 200,
     query: Optional[str] = None,
