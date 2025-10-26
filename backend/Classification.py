@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
 API_KEY = os.getenv("subscription_key")
+if not API_KEY:
+    raise ValueError("subscription_key environment variable is required. Please set it in your .env file.")
 MODEL = "gpt-5-mini"
 client = AsyncAzureOpenAI(
     api_key=API_KEY,
