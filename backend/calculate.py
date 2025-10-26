@@ -57,6 +57,7 @@ async def process_comments(comments):
     total_weight = 0.0
     weighted_score_sum = 0.0
     weighted_metrics_sum = [0.0, 0.0, 0.0, 0.0]
+    total_metric_weights = [0.0, 0.0, 0.0, 0.0]
 
     for c in comments:
         text, url, metrics, weight_factors = c
@@ -72,7 +73,9 @@ async def process_comments(comments):
         total_weight += weight
         weighted_score_sum += score * weight
         for i in range(4):
-            weighted_metrics_sum[i] += metrics[i] * weight
+            if metrics[i] >= 0:  # skip negative metrics
+                weighted_metrics_sum[i] += metrics[i] * weight
+                total_metric_weights[i] += weight
 
     comments_with_weight.sort(key=lambda x: x[1], reverse=True)
     processed = [text for text, _ in comments_with_weight]
@@ -82,8 +85,10 @@ async def process_comments(comments):
         final_metrics = [0.0, 0.0, 0.0, 0.0]
     else:
         final_score = weighted_score_sum / total_weight
-        final_metrics = [m / total_weight for m in weighted_metrics_sum]
-
+        final_metrics = [
+            (weighted_metrics_sum[i] / total_metric_weights[i]) if total_metric_weights[i] > 0 else 0.0
+            for i in range(4)
+        ]
     top5 = [text for text, _ in processed[:5]]
     summ = await summary(top5)
 
