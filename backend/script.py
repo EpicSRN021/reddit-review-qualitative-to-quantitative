@@ -2,7 +2,7 @@ import asyncio
 import subprocess
 import json
 import os
-from openai import AsyncAzureOpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from reddit_api_call import get_reddit_tuples
 from Classification import analyze_comment
@@ -11,7 +11,7 @@ from data import *
 import os
 import re
 import json
-from openai import AsyncAzureOpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 load_dotenv()
 ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
