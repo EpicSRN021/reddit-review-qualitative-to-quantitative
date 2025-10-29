@@ -1,4 +1,4 @@
-##🚀 Overview
+## 🚀 Overview
 
 RedditRadar is a fully deployed web application that helps users find unbiased, community-driven product reviews — all in one place.
 
@@ -6,7 +6,7 @@ When researching a product (say, a MacBook Pro), people often turn to Reddit for
 
 RedditRadar automates this process by collecting, analyzing, and summarizing Reddit discussions into quantitative metrics and actionable insights.
 
-##💡 Motivation
+## 💡 Motivation
 
 Product research on Reddit gives some of the most honest opinions — but at the cost of effort. RedditRadar simplifies this by:
 
@@ -18,7 +18,7 @@ Turning unstructured qualitative data into structured, quantitative insights.
 
 This saves users time and gives them both data-driven scores and authentic user context.
 
-##⚙️ How It Works
+## ⚙️ How It Works
 1. Data Collection
 
 When a user searches for a product (e.g., “MacBook Pro”), RedditRadar:
@@ -51,7 +51,7 @@ A final weighted score is calculated to represent the community’s sentiment to
 
 ⚠️ Note: Currently, the model relies on OpenAI’s API for comment analysis. We planned to fine-tune or deploy our own transformer-based model for this task, but due to the hackathon’s time constraints, this was not implemented yet.
 
-##📊 Features
+## 📊 Features
 🔹 Product Dashboard
 
 Displays an overall product score and subscores for each metric.
@@ -82,14 +82,14 @@ Suggests similar products with their own RedditRadar reviews.
 
 Helps users compare before making a purchase decision.
 
-🧠 Tech Stack
+## 🧠 Tech Stack
 Category	Technology
 Frontend	React.js, Tailwind CSS
 Backend	Flask / FastAPI
 AI & NLP	OpenAI API (planned: in-house transformer fine-tuning)
 Data Source	Reddit API
 Deployment	[Your platform, e.g., Vercel / Render / Azure]
-🧩 Future Improvements
+#  🧩 Future Improvements
 
 Train and integrate a custom transformer model for comment scoring.
 
