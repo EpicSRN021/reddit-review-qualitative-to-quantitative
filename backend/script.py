@@ -18,7 +18,7 @@ ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com
 API_KEY = os.getenv("subscription_key")
 MODEL = "gpt-5-mini"
 REASONING = "low"
-client = AsyncAzureOpenAI(
+client = AsyncOpenAI(
     api_key=API_KEY,
     azure_endpoint=ENDPOINT,
     api_version="2024-12-01-preview"
@@ -35,7 +35,7 @@ load_dotenv()
 ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
 API_KEY = os.getenv("subscription_key")
 MODEL = "gpt-5-mini"
-client = AsyncAzureOpenAI(
+client = AsyncOpenAI(
     api_key=API_KEY,
     azure_endpoint=ENDPOINT,
     api_version="2024-12-01-preview"
