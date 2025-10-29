@@ -31,13 +31,13 @@ Filters for relevant discussions.
 
 Each comment is analyzed and scored out of 5 across four key metrics:
 
-Performance
+Quality
 
-Usability
+Utility
 
-Reliability
+Accessibility
 
-Value
+Cost
 
 Each comment’s weight is then determined by:
 
