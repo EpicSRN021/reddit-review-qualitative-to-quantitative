@@ -85,10 +85,10 @@ Helps users compare before making a purchase decision.
 ## 🧠 Tech Stack
 Category	Technology
 Frontend	React.js, Tailwind CSS
-Backend	Flask / FastAPI
+Backend	FastAPI
 AI & NLP	OpenAI API (planned: in-house transformer fine-tuning)
 Data Source	Reddit API
-Deployment	[Your platform, e.g., Vercel / Render / Azure]
+Deployment	Vercel 
 #  🧩 Future Improvements
 
 Train and integrate a custom transformer model for comment scoring.
