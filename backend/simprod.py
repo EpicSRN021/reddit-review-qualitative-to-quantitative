@@ -7,10 +7,20 @@ import json
 import os
 import sys
 from typing import List
+from openai import AsyncOpenAI
+from dotenv import load_dotenv
+from cache import *
+from script import cache
 
-from Classification import MODEL, client
+load_dotenv()
+API_KEY = os.getenv("subscription_key")
+MODEL = "gpt-5-mini"
+REASONING = "low"
+client = AsyncOpenAI(
+    api_key=API_KEY
+)
 
-DEBUG = os.getenv("SIMPROD_DEBUG") == "1"
+DEBUG = False
 
 
 def _parse_response(raw_response: str) -> List[str]:
@@ -28,6 +38,10 @@ def _parse_response(raw_response: str) -> List[str]:
 
 
 async def fetch_similar_products(product_name: str) -> List[str]:
+    cache_key = product_name + "sim"
+    if cache_key in cache:
+        print("Cache hit")
+        return cache[cache_key]
     """Ask the LLM for three similar products."""
     prompt = f"""
     You are a helpful retail assistant.
@@ -40,24 +54,29 @@ async def fetch_similar_products(product_name: str) -> List[str]:
     """
 
     try:
-        response = await client.chat.completions.create(
+        response = await client.responses.create(
             model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_completion_tokens=1000,  # Increased for reasoning models that use tokens internally
+            input=prompt,
+            max_output_tokens=500
         )
         if DEBUG:
             print(f"DEBUG - Full response object: {response}")
             print(f"DEBUG - Response choices: {response.choices}")
         
-        content = response.choices[0].message.content
+        content = response.output_text
         if DEBUG:
             print("LLM raw response:", repr(content))
         
         if content is None or content.strip() == "":
             print(f"WARNING: LLM returned empty content. Model: {MODEL}")
+            cache[cache_key] = []
+            save_cache(cache)
             return []
             
-        return _parse_response(content)
+        result = _parse_response(content)
+        cache[cache_key] = result
+        save_cache(cache)
+        return result
     except Exception as e:
         print(f"ERROR calling Azure OpenAI API: {type(e).__name__}: {e}")
         if DEBUG:

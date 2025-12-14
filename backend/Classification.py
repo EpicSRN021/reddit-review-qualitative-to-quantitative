@@ -3,53 +3,43 @@ import os
 import re
 import ast
 import json
-from openai import AsyncOpenAI
+from sentence_transformers import SentenceTransformer
+import json
+import pandas as pd
+import torch 
+import numpy as np
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset 
 from dotenv import load_dotenv
 load_dotenv()
-ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
-API_KEY = os.getenv("subscription_key")
-MODEL = "gpt-5-mini"
-MODEL = "gpt-5-mini"
-REASONING = "low"
-client = AsyncOpenAI(
-    api_key=API_KEY,
-    azure_endpoint=ENDPOINT,
-    api_version="2024-12-01-preview"
-)
-async def analyze_comment(reviews: list[str]) -> dict[str, list[int]]:
-     # or format as your prompt
-    
-    prompt = f"""
-    Given is a list of Reddit comments reviewing a product, 
-    analyze each review and rate it from 0-5 for:
-    - quality
-    - cost
-    - availability
-    - utility
-    - credibility
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+class SimpleRegressor(nn.Module):
+    def __init__(self, input_dim=384, output_dim=5):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, output_dim)
+        )
+    def forward(self, x):
+        return self.fc(x)
+model = SimpleRegressor()
+model.load_state_dict(torch.load(r"C:\Users\qiu19\Unwrapathon\reddit-review-qualitative-to-quantitative\backend\model_weights.pt",
+    map_location="cpu"))
+model.eval()
 
-    If the review doesn't relate to a metric, rate it -1. If it's not related to any of the metrics rate its credibility -1. 
+async def analyze_comment(reviews: list[str]) -> list[float]:
+    x = embedder.encode(reviews)
+    x = torch.tensor(x).float()
+    with torch.no_grad():
+        preds = model(x)
+    return preds.tolist()
 
-    Return ONLY a VALID Dictionary in this format where the integer indexes of the comments in order are the keys and the values are lists of integers of the metrics. Do not reason or question. Make sure to keep the length of the dictionary equal to the length of the comment list.  
-    {{
-        1: [quality, cost, availability, utility, credibility],
-        2: [quality, cost, availability, utility, credibility],
-        ...
-    }}
 
-    Reviews: {reviews}
-    """
-    
-    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=16384, reasoning_effort= REASONING)
-    r = response.choices[0].message.content
-    
-    try:
-        r = ast.literal_eval(r)
-    except Exception as e:
-        print("Failed to parse ast", e)
-        r = {}
-    
-    return r
+
+
+
+
 
 
 

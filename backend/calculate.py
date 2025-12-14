@@ -7,25 +7,37 @@ import asyncio
 import os
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
+from cache import *
+import hashlib
 load_dotenv()
-ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
+cache = load_cache()
 API_KEY = os.getenv("subscription_key")
 MODEL = "gpt-5-mini"
 client = AsyncOpenAI(
-    api_key=API_KEY,
-    azure_endpoint=ENDPOINT,
-    api_version="2024-12-01-preview"
+    api_key=API_KEY
 )
 
 async def summary(processed) -> str:
-    prompt = f"""
-    Given is a list of 5 Reddit comments reviewing a product, ,
+    normalized = sorted(processed)
+    joined = "\n".join(normalized) + "sum"
+    hash_value = hashlib.sha256(joined.encode()).hexdigest()
+    cache_key = hash_value
+    if cache_key in cache:
+        print("Cache hit")
+        summary = cache[cache_key]
+        return summary
+    prompt = f"""Given is a list of 5 Reddit comments reviewing a product,
     give a quick summary for a potential buyer.
     Reviews: {processed}
     """
-    
-    response = await client.chat.completions.create(model=MODEL, messages=[{"role": "user", "content": prompt}], max_completion_tokens=5000)
-    return response.choices[0].message.content
+    response = await client.responses.create(
+        model=MODEL,
+        input=prompt,
+        max_output_tokens=500
+    )
+    cache[cache_key] = response.output_text
+    save_cache(cache)
+    return response.output_text
 
 async def compute_score(metrics):
     valid_metrics = [m for m in metrics if m != -1]
@@ -86,7 +98,7 @@ async def process_comments(comments):
     else:
         # final_score = weighted_score_sum / total_weight
         final_metrics = [
-            (weighted_metrics_sum[i] / total_metric_weights[i]) if total_metric_weights[i] > 0 else 0.0
+            (weighted_metrics_sum[i] / total_metric_weights[i]) +1 if total_metric_weights[i] > 0 else 0.0
             for i in range(4)
         ]
         sum = 0

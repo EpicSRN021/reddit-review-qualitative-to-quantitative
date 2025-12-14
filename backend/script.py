@@ -8,40 +8,28 @@ from reddit_api_call import get_reddit_tuples
 from Classification import analyze_comment
 from calculate import *
 from data import *
-import os
+from cache import *
+import hashlib
 import re
-import json
-from openai import AsyncOpenAI
-from dotenv import load_dotenv
+cache = load_cache()
 load_dotenv()
-ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
 API_KEY = os.getenv("subscription_key")
 MODEL = "gpt-5-mini"
 REASONING = "low"
 client = AsyncOpenAI(
-    api_key=API_KEY,
-    azure_endpoint=ENDPOINT,
-    api_version="2024-12-01-preview"
+    api_key=API_KEY
 )
 
 
 commentlist = []
 newdata = []
 
-# Load environment variables
-load_dotenv()
-
-# OpenAI client setup (same as in other files)
-ENDPOINT = "https://unwrap-hackathon-oct-20-resource.cognitiveservices.azure.com/"
-API_KEY = os.getenv("subscription_key")
-MODEL = "gpt-5-mini"
-client = AsyncOpenAI(
-    api_key=API_KEY,
-    azure_endpoint=ENDPOINT,
-    api_version="2024-12-01-preview"
-)
 
 async def generate_gpt_summary(product_name: str) -> str:
+    cache_key = product_name + "sum"
+    if cache_key in cache:
+        print("Cache hit")
+        return cache[cache_key]
     """Generate a product summary using GPT when no Reddit comments are found"""
     try:
         prompt = f"""First, determine if "{product_name}" is a product that can be reviewed. If it's a product, create a review with 3 pros and 3 cons. If it's not a product (like a person, place, concept, etc.), respond with "NOT_A_PRODUCT".
@@ -60,21 +48,24 @@ CONS:
 
 Make each point specific and brief."""
         
-        response = await client.chat.completions.create(
-            model=MODEL, 
-            messages=[{"role": "user", "content": prompt}], 
-            max_completion_tokens=1000,
-            reasoning_effort="low"
+        response = await client.responses.create(
+            model=MODEL,
+            input=prompt,
+            max_output_tokens=500
         )
         
+        
         # Extract content - handle both standard and reasoning model responses
-        summary = response.choices[0].message.content
+        summary = response.output_text
         print(f"DEBUG: GPT response content: '{summary}'")
         
         # Check if GPT determined it's not a product
         if summary and "NOT_A_PRODUCT" in summary.upper():
             print(f"GPT determined '{product_name}' is not a product")
-            return f"'{product_name}' is not a product that can be reviewed. Please search for an actual product instead."
+            response = f"'{product_name}' is not a product that can be reviewed. Please search for an actual product instead."
+            cache[cache_key] = response
+            save_cache(cache)
+            return response
         
         # If content is None or empty, try a simpler approach
         if not summary or len(summary.strip()) == 0:
@@ -82,25 +73,33 @@ Make each point specific and brief."""
             
             # Try a much simpler prompt
             simple_prompt = f"Is {product_name} a product? If yes, list 3 pros and 3 cons. If no, say 'NOT_A_PRODUCT'."
-            simple_response = await client.chat.completions.create(
+            simple_response = await client.responses.create(
                 model=MODEL,
-                messages=[{"role": "user", "content": simple_prompt}],
-                max_completion_tokens=1000,
-                reasoning_effort="low"
+                input=simple_prompt,
+                max_output_tokens=500
             )
-            summary = simple_response.choices[0].message.content
+            summary = simple_response.output_text
+        
+            
             
             # Check if fallback also determined it's not a product
             if summary and "NOT_A_PRODUCT" in summary.upper():
                 print(f"Fallback GPT determined '{product_name}' is not a product")
-                return f"'{product_name}' is not a product that can be reviewed. Please search for an actual product instead."
-            
+                summary = f"'{product_name}' is not a product that can be reviewed. Please search for an actual product instead."
+                cache[cache_key] = summary
+                save_cache(cache)
+                return summary
             # If still empty, provide a basic product summary
             if not summary or len(summary.strip()) == 0:
                 print(f"WARNING: Even simple prompt returned empty content.")
                 summary = f"The {product_name} is a product that may not have extensive Reddit discussion. For detailed reviews, consider checking manufacturer websites, Amazon reviews, or other review platforms. This product might be better known by alternative names or in specific communities."
+                cache[cache_key] = summary
+                save_cache(cache)
+                return summary
         
         print(f"GPT Summary generated successfully ({len(summary)} characters)")
+        cache[cache_key] = summary
+        save_cache(cache)
         return summary
         
     except Exception as e:
@@ -134,7 +133,7 @@ async def fetch_data(keyword):
         commentlist.append(data[0])
     metrics =  await analyze_comment(commentlist)
     # metrics = json.loads(metricstring)
-    index = 1
+    index = 0
     newdata = []
     for comment, url, weights in reddit_data: 
         if(index <= len(metrics)):
@@ -160,6 +159,14 @@ async def fetch_data(keyword):
     return p, fs, fm, summ, pros, cons, False  # is_not_product = False for normal products
 
 async def fetch_pros_cons(commentlist, newdata):
+    normalized = sorted(commentlist)
+    joined = "\n".join(normalized)
+    hash_value = hashlib.sha256(joined.encode()).hexdigest()
+    cache_key = hash_value
+    if cache_key in cache:
+        print("Cache hit")
+        pros, cons = cache[cache_key]
+        return pros, cons
     prompt = f"""
     Given a list of Reddit reviews of a product, extract the main pros and cons based on the comments.
     For each pro or con, provide the text and the index of the review from the list it was based on.
@@ -179,17 +186,14 @@ async def fetch_pros_cons(commentlist, newdata):
     Reviews: {commentlist}
     """
     
-    response = await client.chat.completions.create(
-        model=MODEL, 
-        messages=[{"role": "user", "content": prompt}], 
-        max_completion_tokens=5000,
-        response_format={"type": "json_object"}
+    response = await client.responses.create(
+        model=MODEL,
+        input=prompt,
+        max_output_tokens=5000
     )
-    
     # Parse the JSON response
-    result = json.loads(response.choices[0].message.content)
+    result = json.loads(response.output_text)
     
-    # Extract pros and cons with their comment indices
     pros = []
     cons = []
 
@@ -202,7 +206,8 @@ async def fetch_pros_cons(commentlist, newdata):
         idx = item.get("comment_index")
         url = newdata[idx][1] if 0 <= idx < len(newdata) else None
         cons.append((item["text"], url))
-
+    cache[cache_key] = [pros, cons]
+    save_cache(cache)
     return pros, cons        
             
 
